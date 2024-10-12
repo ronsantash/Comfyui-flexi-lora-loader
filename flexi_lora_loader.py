@@ -6,13 +6,14 @@ import folder_paths
 class FlexiLoRALoader:
     @classmethod
     def INPUT_TYPES(cls):
+        lora_list = ["None"] + folder_paths.get_filename_list("loras")
         return {
             "required": {
                 "model": ("MODEL",),
                 "clip": ("CLIP",),
-                "lora1": (folder_paths.get_filename_list("loras"),),
-                "lora2": (folder_paths.get_filename_list("loras"),),
-                "lora3": (folder_paths.get_filename_list("loras"),),
+                "lora1": (lora_list,),
+                "lora2": (lora_list,),
+                "lora3": (lora_list,),
             },
         }
 
