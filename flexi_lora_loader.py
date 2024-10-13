@@ -1,8 +1,6 @@
 import os
-import json
-from comfy.sd import load_lora_for_models
-from comfy.lora import load_lora  # 新しくインポート
-import sys
+import comfy.utils
+import comfy.sd
 import folder_paths
 import safetensors.torch
 
@@ -42,14 +40,15 @@ class FlexiLoRALoader:
         lorapath = folder_paths.get_full_path("loras", loraname)
         if os.path.exists(lorapath):
             try:
-                lora_object = safetensors.torch.load_file(lorapath)
-                return lora_object
+                lora = comfy.utils.load_torch_file(lorapath)
+                return lora
             except Exception as e:
                 print(f"Error loading LoRA from {lorapath}: {e}")
                 return None
         else:
             print(f"LoRA file not found: {lorapath}")
             return None
+
 
     def apply_loras(self, mode, album_name, model, clip, lora1, lora1_text, lora2, lora2_text, lora3, lora3_text, weights_display, debug_display):
         debug_messages = []
@@ -68,24 +67,22 @@ class FlexiLoRALoader:
 
         for i in range(max_length):
             queue = []
-            current_lora1 = self.get_lora_object(lora1)
-            current_lora2 = self.get_lora_object(lora2)
-            current_lora3 = self.get_lora_object(lora3)
+            loras_to_apply = [
+                (lora1, lora1_weights[i], "lora1"),
+                (lora2, lora2_weights[i], "lora2"),
+                (lora3, lora3_weights[i], "lora3")
+            ]
 
-            if current_lora1 and lora1_weights[i] > 0:
-                debug_messages.append(f"Loading LoRA: {lora1} with weight: {lora1_weights[i]}")
-                model, clip = load_lora_for_models(model, clip, current_lora1, lora1_weights[i], lora1_weights[i])  # strength_clip を lora1_weights[i] として使用
-                queue.append(f'lora1:{lora1_weights[i]}')
-
-            if current_lora2 and lora2_weights[i] > 0:
-                debug_messages.append(f"Loading LoRA: {lora2} with weight: {lora2_weights[i]}")
-                model, clip = load_lora_for_models(model, clip, current_lora2, lora2_weights[i], lora2_weights[i])  # strength_clip を lora2_weights[i] として使用
-                queue.append(f'lora2:{lora2_weights[i]}')
-
-            if current_lora3 and lora3_weights[i] > 0:
-                debug_messages.append(f"Loading LoRA: {lora3} with weight: {lora3_weights[i]}")
-                model, clip = load_lora_for_models(model, clip, current_lora3, lora3_weights[i], lora3_weights[i])  # strength_clip を lora3_weights[i] として使用
-                queue.append(f'lora3:{lora3_weights[i]}')
+            for lora_name, weight, lora_key in loras_to_apply:
+                if lora_name != 'None' and weight > 0:
+                    try:
+                        debug_messages.append(f"Loading LoRA: {lora_name} with weight: {weight}")
+                        lora_path = folder_paths.get_full_path("loras", lora_name)
+                        lora = comfy.utils.load_torch_file(lora_path, safe_load=True)
+                        model, clip = comfy.sd.load_lora_for_models(model, clip, lora, weight, weight)
+                        queue.append(f'{lora_key}:{weight}')
+                    except Exception as e:
+                        debug_messages.append(f"Error applying LoRA {lora_name}: {str(e)}")
 
             if queue:
                 applied_queues.append(' '.join(queue))
@@ -94,4 +91,15 @@ class FlexiLoRALoader:
         weights_display = output_string
         debug_display = "\n".join(debug_messages)
 
+        # クリッピングを適用（必要に応じて）
+        # model = self.clip_weights(model)
+        # clip = self.clip_weights(clip)
+
         return (model, clip, output_string, weights_display, debug_display)
+
+    # 必要に応じて重みをクリッピングするメソッド
+    def clip_weights(self, module, min_val=-5, max_val=5):
+        with torch.no_grad():
+            for param in module.parameters():
+                param.clamp_(min_val, max_val)
+        return module
