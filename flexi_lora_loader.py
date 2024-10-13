@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 class FlexiLoRALoader:
     # 初期値を変数として定義
-    DEFAULT_LORA1_WEIGHTS = '0.7,0.6,0.4,0.3,0.4,0.2,0.5,0.4'
-    DEFAULT_LORA2_WEIGHTS = '0.3,0.4,0.6,0.3,0.4,0.8,0.5,0.7'
+    DEFAULT_LORA1_WEIGHTS = '0.7,0.3,0.4,0.3,0.4,0.2,0.5,0.4'
+    DEFAULT_LORA2_WEIGHTS = '0.3,0.7,0.6,0.3,0.4,0.8,0.5,0.7'
     DEFAULT_LORA3_WEIGHTS = '0.1'
 
     @classmethod
@@ -29,12 +29,10 @@ class FlexiLoRALoader:
                 'lora2_text': ('STRING', {'multiline': False, 'default': cls.DEFAULT_LORA2_WEIGHTS}),
                 'lora3': (lora_list,),
                 'lora3_text': ('STRING', {'multiline': False, 'default': cls.DEFAULT_LORA3_WEIGHTS}),
-                'weights_display': ('STRING', {'multiline': True, 'lines': 10, 'default': ''}),
-                'debug_display': ('STRING', {'multiline': True, 'lines': 10, 'default': ''}),
             },
         }
 
-    RETURN_TYPES = ("MODEL", "CLIP", "STRING", "STRING", "STRING")
+    RETURN_TYPES = ("MODEL", "CLIP", "STRING")
     FUNCTION = "apply_loras"
     CATEGORY = "loaders"
 
@@ -53,37 +51,32 @@ class FlexiLoRALoader:
             print(f"LoRA file not found: {lorapath}")
             return None
 
-    def apply_loras(self, mode, album_name, model, clip, lora1, lora1_text, lora2, lora2_text, lora3, lora3_text, weights_display, debug_display):
-        debug_messages = []
-
-        # 各LoRAの最初の値だけを取得
-        lora1_weight = float((lora1_text or self.DEFAULT_LORA1_WEIGHTS).split(',')[0])
-        lora2_weight = float((lora2_text or self.DEFAULT_LORA2_WEIGHTS).split(',')[0])
-        lora3_weight = float((lora3_text or self.DEFAULT_LORA3_WEIGHTS).split(',')[0])
-
-        applied_queues = []
+    def apply_loras(self, mode, album_name, model, clip, lora1, lora1_text, lora2, lora2_text, lora3, lora3_text):
+        lora1_weights = [float(x) for x in (lora1_text or self.DEFAULT_LORA1_WEIGHTS).split(',')]
+        lora2_weights = [float(x) for x in (lora2_text or self.DEFAULT_LORA2_WEIGHTS).split(',')]
+        lora3_weights = [float(x) for x in (lora3_text or self.DEFAULT_LORA3_WEIGHTS).split(',')]
 
         current_lora1 = self.get_lora_object(lora1)
         current_lora2 = self.get_lora_object(lora2)
         current_lora3 = self.get_lora_object(lora3)
 
-        if current_lora1 is not None and lora1_weight > 0:
-            debug_messages.append(f"Loading LoRA: {lora1} with weight: {lora1_weight}")
-            model, clip = comfy.sd.load_lora_for_models(model, clip, current_lora1, lora1_weight, lora1_weight)
-            applied_queues.append(f'lora1:{lora1_weight}')
+        applied_loras = []
 
-        if current_lora2 is not None and lora2_weight > 0:
-            debug_messages.append(f"Loading LoRA: {lora2} with weight: {lora2_weight}")
-            model, clip = comfy.sd.load_lora_for_models(model, clip, current_lora2, lora2_weight, lora2_weight)
-            applied_queues.append(f'lora2:{lora2_weight}')
+        if current_lora1 is not None and len(lora1_weights) > 0:
+            weight = lora1_weights[0]
+            model, clip = comfy.sd.load_lora_for_models(model, clip, current_lora1, weight, weight)
+            applied_loras.append(f"{lora1}:{weight}")
 
-        if current_lora3 is not None and lora3_weight > 0:
-            debug_messages.append(f"Loading LoRA: {lora3} with weight: {lora3_weight}")
-            model, clip = comfy.sd.load_lora_for_models(model, clip, current_lora3, lora3_weight, lora3_weight)
-            applied_queues.append(f'lora3:{lora3_weight}')
+        if current_lora2 is not None and len(lora2_weights) > 0:
+            weight = lora2_weights[0]
+            model, clip = comfy.sd.load_lora_for_models(model, clip, current_lora2, weight, weight)
+            applied_loras.append(f"{lora2}:{weight}")
 
-        output_string = f"Album: {album_name}, Applied LoRAs: " + " | ".join(applied_queues)
-        weights_display = output_string
-        debug_display = "\n".join(debug_messages)
+        if current_lora3 is not None and len(lora3_weights) > 0:
+            weight = lora3_weights[0]
+            model, clip = comfy.sd.load_lora_for_models(model, clip, current_lora3, weight, weight)
+            applied_loras.append(f"{lora3}:{weight}")
 
-        return (model, clip, output_string, weights_display, debug_display)
+        output_string = ",".join(applied_loras)
+
+        return (model, clip, output_string)
