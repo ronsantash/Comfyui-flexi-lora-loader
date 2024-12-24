@@ -1,9 +1,9 @@
-from .flexi_lora_loader import FlexiLoRALoader
+from .comfyui_flexi_lora_loader import ComfyUIFlexiLoRALoader
 
 NODE_CLASS_MAPPINGS = {
-    "FlexiLoRALoader": FlexiLoRALoader
+    "ComfyUIFlexiLoRALoader": ComfyUIFlexiLoRALoader
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "FlexiLoRALoader": "Flexi LoRA Loader"
+    "ComfyUIFlexiLoRALoader": "ComfyUI Flexi LoRA Loader"
 }

@@ -1,3 +1,5 @@
+__version__ = '0.1.0'
+
 import os
 import comfy.utils
 import comfy.sd
@@ -11,11 +13,11 @@ import time
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class FlexiLoRALoader:
+class ComfyUIFlexiLoRALoader:
     # 初期値を変数として定義
-    DEFAULT_LORA1_WEIGHTS = '0.7,0.6,0.4,0.4,0.6,0.6,0.1,0.2,0.3,0.4,0.5,0.2,0.8,0.2,0.1,0.4,0.2,0.4,0.6,0.7,0.0,0.0,0.0'
-    DEFAULT_LORA2_WEIGHTS = '0.3,0.4,0.6,0.6,0.4,0.4,0.1,0.2,0.3,0.4,0.5,0.8,0.2,0.6,0.4,0.2,0.1,0.0,0.0,0.0,0.4,0.6,0.7'
-    DEFAULT_LORA3_WEIGHTS = '0.3,0.2,0.0,0.1,0.1,0.2,0.1,0.1,0.1,0.2,0.1,0.1,0.2,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.2,0.2'
+    DEFAULT_LORA1_WEIGHTS = '0.6,0.4,0.5,0.3,0.2,0.3,0.1,0.1,0.5,0.2'
+    DEFAULT_LORA2_WEIGHTS = '0.4,0.6,0.5,0.6,0.4,0.3,0.6,0.4,0.5,0.2'
+    DEFAULT_LORA3_WEIGHTS = '0.2,0.0,0.1,0.3,0.2,0.3,0.2,0.1,0.1,0.1'
 
     def __init__(self):
         self.rng = random.Random()
@@ -30,19 +32,19 @@ class FlexiLoRALoader:
                 'model': ('MODEL',),
                 'clip': ('CLIP',),
                 'lora1': (lora_list,),
-                'lora1_text': ('STRING', {'multiline': False, 'default': cls.DEFAULT_LORA1_WEIGHTS}),
+                'lora1_weight': ('STRING', {'multiline': False, 'default': cls.DEFAULT_LORA1_WEIGHTS}),
                 'lora2': (lora_list,),
-                'lora2_text': ('STRING', {'multiline': False, 'default': cls.DEFAULT_LORA2_WEIGHTS}),
+                'lora2_weight': ('STRING', {'multiline': False, 'default': cls.DEFAULT_LORA2_WEIGHTS}),
                 'lora3': (lora_list,),
-                'lora3_text': ('STRING', {'multiline': False, 'default': cls.DEFAULT_LORA3_WEIGHTS}),
+                'lora3_weight': ('STRING', {'multiline': False, 'default': cls.DEFAULT_LORA3_WEIGHTS}),
                 'seed': ('INT', {'default': 0, 'min': 0, 'max': 0xffffffffffffffff}),
-                'control_after_generate': (['fixed', 'increment', 'decrement', 'randomize'], {'default': 'randomize'}),
             },
         }
 
     RETURN_TYPES = ("MODEL", "CLIP", "STRING", "INT")
+    RETURN_NAMES = ("model", "clip", "string", "seed")
     FUNCTION = "apply_loras"
-    CATEGORY = "loaders"
+    CATEGORY = "loaders/lora"
 
     def get_lora_object(self, loraname):
         if loraname == 'None':
@@ -59,7 +61,7 @@ class FlexiLoRALoader:
             logger.warning(f"LoRA file not found: {lorapath}")
             return None
 
-    def apply_loras(self, mode, album_name, model, clip, lora1, lora1_text, lora2, lora2_text, lora3, lora3_text, seed, control_after_generate):
+    def apply_loras(self, mode, album_name, model, clip, lora1, lora1_weight, lora2, lora2_weight, lora3, lora3_weight, seed, control_after_generate='randomize'):
         debug_messages = []
 
         # 重み値の処理を修正
@@ -68,9 +70,9 @@ class FlexiLoRALoader:
                 return [0.0]
             return [float(x) for x in input_text.split(',')]
 
-        lora1_weights = get_weights(lora1_text)
-        lora2_weights = get_weights(lora2_text)
-        lora3_weights = get_weights(lora3_text)
+        lora1_weights = get_weights(lora1_weight)
+        lora2_weights = get_weights(lora2_weight)
+        lora3_weights = get_weights(lora3_weight)
 
         # 最大長を取得
         max_length = max(len(lora1_weights), len(lora2_weights), len(lora3_weights))

@@ -1,9 +1,9 @@
 import { app } from "../../scripts/app.js";
 
 app.registerExtension({
-  name: "FlexiLoRALoader",
+  name: "ComfyUIFlexiLoRALoader", 
   async beforeRegisterNodeDef(nodeType, nodeData, app) {
-    if (nodeData.name === "FlexiLoRALoader") {
+    if (nodeData.name === "ComfyUIFlexiLoRALoader") {  
       const onNodeCreated = nodeType.prototype.onNodeCreated;
       nodeType.prototype.onNodeCreated = function () {
         onNodeCreated?.apply(this, arguments);
