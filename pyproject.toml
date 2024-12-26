@@ -1,0 +1,14 @@
+[project]
+name = "comfyui-flexi-lora-loader"
+description = "FlexiLoRALoader - A ComfyUI custom node for dynamic LoRA weight management. Apply multiple LoRAs with flexible weight patterns and randomization features for creative AI image generation.\nFeatures: • Multiple LoRA handling (up to 3) • Weight pattern presets • Random/Sequential mode • Debug logging support"
+version = "1.0.0"
+license = {file = "LICENSE"}
+
+[project.urls]
+Repository = "https://github.com/ronsantash/Comfyui-flexi-lora-loader"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "Comfyui-flexi-lora-loader"
+Icon = ""
