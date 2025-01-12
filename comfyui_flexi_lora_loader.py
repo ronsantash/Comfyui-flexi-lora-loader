@@ -1,4 +1,4 @@
-__version__ = '0.2.1'
+__version__ = '0.2.0'
 
 import os
 import comfy.utils
@@ -81,6 +81,18 @@ class ComfyUIFlexiLoRALoader:
             return self.rng.randint(0, 0xffffffffffffffff)
         return current_seed
 
+    def format_weights(self, weights):
+        """重みを2桁の整数文字列に変換（例: 0.5 → '05'）"""
+        formatted = []
+        for weight in weights:
+            # 重みを2桁の整数に変換（0.5 → 05）
+            value = int(abs(weight * 10))  # 100ではなく10を掛ける
+            weight_str = f"{value:02d}"
+            if weight < 0:
+                weight_str = f"-{weight_str}"
+            formatted.append(weight_str)
+        return formatted
+
     def format_output_message(self, album_name, applied_queues, debug_messages, random_index, max_length):
         output_lines = [
             f"Album: {album_name}",
@@ -118,6 +130,7 @@ class ComfyUIFlexiLoRALoader:
         debug_messages.append(f"Generated index: {random_index + 1}")
 
         applied_queues = []
+        current_weights = []  # 重みを保存するリストを追加
 
         # LoRAの適用
         lora_configs = [
@@ -130,16 +143,23 @@ class ComfyUIFlexiLoRALoader:
             current_lora = self.get_lora_object(lora_name)
             if current_lora is not None:
                 weight = weights[random_index]
+                current_weights.append(weight)  # 重みを保存
                 debug_messages.append(f"Applying LoRA: {lora_name} with weight: {weight}")
                 model, clip = comfy.sd.load_lora_for_models(model, clip, current_lora, weight, weight)
                 applied_queues.append(f'{lora_id}:{weight}')
 
+        # 重みを2桁の文字列に変換
+        formatted_weights = self.format_weights(current_weights)
+
+        # album_nameに重みを追加
+        modified_album_name = album_name + ''.join(formatted_weights)
+
         # 出力メッセージの作成
         output_message = self.format_output_message(
-            album_name, applied_queues, debug_messages, random_index, max_length
+            modified_album_name, applied_queues, debug_messages, random_index, max_length
         )
 
         # 次のシード値を準備
         next_seed = self.get_next_seed(seed, control_after_generate)
 
-        return (model, clip, output_message, album_name, next_seed)
+        return (model, clip, output_message, modified_album_name, next_seed)

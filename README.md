@@ -2,24 +2,39 @@
 
 ![version](https://img.shields.io/badge/version-0.1.0-blue)
 
-A custom node for ComfyUI that allows you to experiment with multiple LoRA models using various weight combinations.
+## Changelog
+
+### v0.2.0
+
+- Modified album_name output to automatically append applied weight values
+  - Example: If input is "FLL" and weights are 0.5, 0.6, 0.1, output will be "FLL050601"
+- Added support for negative weight values
+
+### v0.1.0
+
+- Initial release
+- Support for applying multiple LoRA models simultaneously
+- Multiple weights can be set as a list for each LoRA
+- Implementation of randomize mode
+
+A ComfyUI custom node for experimenting with multiple LoRA models using various weight combinations.
 
 ## Purpose and Features
 
-This custom node is designed to maximize the potential of LoRA models.
+This custom node aims to maximize the potential of LoRA models.
 
-While LoRA weights significantly influence expressions and poses, using fixed values can limit specific expressions. This node offers:
+While LoRA weights significantly influence expressions and poses, using fixed values can limit specific expressions. With this node:
 
-- Ability to set multiple weight values as lists for various combinations
-- Find desired expressions by observing generation results
-- Track applied LoRA weights through string output, which can be connected to memo inputs of nodes like D2 Send Eagle
+- You can set multiple weight values as a list to try various combinations
+- Observe generation results to find weights that achieve desired expressions
+- Check applied LoRA weights through string output and save records by connecting to memo inputs like D2 Send Eagle node
 
 ## Features
 
 - Apply up to 3 LoRA models simultaneously
 - Set multiple weights for each LoRA model
-- Applies nth weight per queue
-- LoRAs without nth element set will apply 0.0
+- Applies nth weight for each queue
+- LoRAs without nth element default to 0.0 weight
 - Operation modes:
   - randomize: randomly select weights (currently implemented)
   - in order: apply weights sequentially (planned for future update)
@@ -27,16 +42,18 @@ While LoRA weights significantly influence expressions and poses, using fixed va
 ## Usage
 
 ### Basic Setup
+
 1. Add FlexiLoRALoader node to your workflow
 2. Select desired LoRA models
 3. Adjust weight values as needed
 4. Currently only 'randomize' mode is available
 
 ### Recommended Workflow
+
 1. Start with a wide range of weight values (0.0-1.0)
-2. Record generation results and weight values using string output
+2. Use string output to record generation results and weight values
 3. Identify weight values that produce favorable results
-4. Adjust weight value lists to achieve desired expressions
+4. Adjust weight lists to achieve desired expressions
 
 ## Parameters
 
@@ -61,24 +78,24 @@ While LoRA weights significantly influence expressions and poses, using fixed va
 
 ## Development Status
 
-Currently in beta testing. Please submit bug reports and feature requests through Issues.
-'in order' mode will be implemented in a future update.
+Currently in test release. Please report bugs and feature requests through Issues.
+'in order' mode planned for future updates.
 
 ## Notes
 
-- Weight values should be between 0.0 and 1.0
-- Shorter weight lists will be padded with 0.0
+- Specify weight values between 0.0 and 1.0
+- Shorter weight lists are padded with 0.0
 
 ## Acknowledgments
 
-Special thanks to:
-- [AI Image Studio](https://civitai.com/user/AIImageStudio) for their exceptional LoRA "Analog Film Gravure for Flux", which was the primary inspiration for this project.
+The amazing LoRA that inspired the development of this node:
+
+- ["Analog Film Gravure for Flux" by AI Image Studio](https://civitai.com/user/AIImageStudio)
+  - I use this wonderful LoRA with various weights in almost all of my works. This node would not exist without this amazing LoRA.
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
-
-*Read this in other languages: [日本語](README.ja.md)*
 
 ## Author
 
